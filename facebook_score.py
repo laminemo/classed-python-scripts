@@ -38,11 +38,11 @@ for result in collection.find():
         nb_fans = result["page_fans"]
         tx = engaged_users / nb_fans
         collection.update_one({"_id": result['_id']}, {"$set": {"page_engagement_rate": tx}})
-        influence_account.update_one({"": result["_id"]}, {"$set": {"facebook_engagement_rate": round(tx, 2)}})
+        influence_account.update_one({"page_fb": result["_id"]}, {"$set": {"facebook_engagement_rate": round(tx, 2)}})
     except:
 
         collection.update_one({"_id": result['_id']}, {"$set": {"page_engagement_rate": 0}})
-        influence_account.update_one({"": result["_id"]}, {"$set": {"facebook_engagement_rate": 0}})
+        influence_account.update_one({"page_fb": result["_id"]}, {"$set": {"facebook_engagement_rate": 0}})
     #### ajout de la mÃƒÆ’Ã‚Â©trique page_posts_engagement_rate
 
     try:
