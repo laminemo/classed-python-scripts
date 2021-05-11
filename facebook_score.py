@@ -148,44 +148,63 @@ for result in collection.find():
                 verification_status = 1
 
             collection.update_one({"_id": result['_id']}, {"$set": {"verification_status": verification_status}})
-
 #### Normalisation des variables utilisÃƒÆ’Ã‚Â©es pour le calcul du score
 #### Normalisation : (x - min) / (max - min)
-kpis = ["page_fans", "page_negative_feedback_unique", "page_engagement_rate",
+kpis_pos = ["page_fans", "page_engagement_rate",
         "page_posts_engagement_rate", "reach_rate", "fan_adds_rate",
         "fan_adds_removes_rate", "verification_status","page_video_views","vu_unique_rate","vu_click_rate","vu_complete_30s_rate"]
-#division = [1, 2, 3, 4, 5, 6, 7, 8]
+kpis_neg=["page_negative_feedback_unique"]
 collection = db["page_fb_stats"]
-for kpi in kpis:
+for kpi in kpis_pos:
+    for k in kpis_neg:
+        for div in division:
+            pipeline = [
+                {"$match": {"division": div}},
+                {"$group": {
+                    "_id": "_id",
+                    "max": {"$max": "$" + kpi},
+                    "min": {"$min": "$" + kpi}
+                }
+                }
 
-    for div in division:
+            ];
+            pipeline_1 = [
+                {"$match": {"division": div}},
+                {"$group": {
+                    "_id": "_id",
+                    "max": {"$max": "$" + k},
+                    "min": {"$min": "$" + k}
+                }
+                }
 
-        pipeline = [
-            {"$match": {"division": div}},
-            {"$group": {
-                "_id": "_id",
-                "max": {"$max": "$" + kpi},
-                "min": {"$min": "$" + kpi}
-            }
-            }
+            ];
 
-        ];
+            if len(list(collection.aggregate(pipeline))) != 0:
 
-        if len(list(collection.aggregate(pipeline))) != 0:
+               min = list(collection.aggregate(pipeline))[0]['min']
+               max = list(collection.aggregate(pipeline))[0]['max']
 
-            min = list(collection.aggregate(pipeline))[0]['min']
-            max = list(collection.aggregate(pipeline))[0]['max']
+            if len(list(collection.aggregate(pipeline_1))) != 0:
 
-            for user in collection.find({"division": div}):
+               min_1 = list(collection.aggregate(pipeline_1))[0]['min']
+               max_1 = list(collection.aggregate(pipeline_1))[0]['max']
 
-                if (max - min) != 0:
-                    collection.update_one({"_id": user['_id']},
-                                          {"$set": {kpi + "_normal": (user[kpi] - min) / (max - min)}})
+               for user in collection.find({"division": div}):
 
-                else:
-                    collection.update_one({"_id": user['_id']}, {"$set": {kpi + "_normal": 0}})
+                   if (max - min) != 0:
+                       collection.update_one({"_id": user['_id']},
+                                             {"$set": {kpi + "_normal": (user[kpi] - min) / (max - min)}})
 
-#### ImplÃƒÆ’Ã‚Â©mentation de TOPSIS
+                   else:
+                       collection.update_one({"_id": user['_id']}, {"$set": {kpi + "_normal": 0}})
+                   if (max_1 - min_1) != 0:
+                       collection.update_one({"_id": user['_id']},
+                                             {"$set": {k + "_normal": (user[k] - max) / (max - min)}})
+                   else:
+                       collection.update_one({"_id": user['_id']}, {"$set": {k + "_normal": 0}})
+
+
+#### Implémentation de TOPSIS
 
 ### Meilleur influenceur : (1, 1, ...) * weights
 ### Pire influenceur : (0, 0, ...)
@@ -194,7 +213,7 @@ kpi_normal = ["page_fans_normal", "page_negative_feedback_unique_normal", "page_
               "page_posts_engagement_rate_normal", "reach_rate_normal", "fan_adds_rate_normal",
               "fan_adds_removes_rate_normal", "verification_status_normal","page_video_views_normal","vu_unique_rate_normal","vu_click_rate_normal","vu_complete_30s_rate_normal"]
 
-weights = [0.2, 0.05, 0.05, 0.15, 0.15, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1]
+weights = [0.25, 0.025, 0.15, 0.1, 0.15, 0.05, 0.025, 0.1, 0.1125, 0.0125, 0.0125, 0.0125]
 
 for inf in collection.find():
     for k in kpi_normal:
@@ -204,15 +223,15 @@ for inf in collection.find():
         except:
             collection.update_one({"_id": inf['_id']}, {"$set": {k + '_pond': '0'}})
 
-### Meilleur influenceur: (max-min/max-min=1)
+### Meilleur influenceur: (max-min/max-min=1) ou pour negative criteria (max-max/max-min=0)
 
-# best_alt = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 ,1]*weights
+# best_alt = [1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1 ,1]*weights
 
-best_alt = [0.2, 0.05, 0.05, 0.15, 0.15, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1]
+best_alt = [0.25, 0.025, 0.15, 0.1, 0.15, 0.05, 0.025, 0.1, 0.1125, 0.0125, 0.0125, 0.0125]
 
-### pire influenceur: (min-min/max-min=1)
+### pire influenceur: (min-min/max-min=0)
 
-worst_alt = [0, 0, 0, 0, 0, 0, 0, 0, 0 , 0, 0, 0]
+worst_alt = [0, 0.025, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
 
 
 
