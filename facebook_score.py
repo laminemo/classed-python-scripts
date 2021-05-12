@@ -5,10 +5,10 @@ import config
 # Script de calcul du score sur la plateforme Facebook
 # Connection au cluster :
 client = MongoClient(config.MONGO_PASSPHRASE)
-db = client["database"]
-collection = db["page_fb_stats"]
-page_fb_collection = db["page_fb"]
-influence_account = db["influence_account"]
+db = client[config.MONGO_DB_NAME]
+collection = db[config.COLL_PAGES_FB_STATS]
+page_fb_collection = db[config.COLL_PAGES_FB]
+influence_account = db[config.COLL_INFLUENCE_ACCOUNTS]
 
 # Affectation A une division en fonction du nombre de followers :
 
@@ -96,7 +96,7 @@ for result in collection.find():
         collection.update_one({"_id": result['_id']}, {
                               "$set": {"fan_adds_rate": 0}})
 
-    # ajout de la métrique fan_removes_rate
+    # ajout de la metrique fan_removes_rate
 
     try:
         nb_fans_remove = result["page_fan_removes_unique"]
@@ -110,7 +110,7 @@ for result in collection.find():
         collection.update_one({"_id": result['_id']}, {
                               "$set": {"fan_removes_rate": 0}})
 
-    # ajout de la métrique fan_adds_removes_rate
+    # ajout de la metrique fan_adds_removes_rate
 
     try:
         nb_fans_remove = result["page_fan_removes_unique"]
@@ -123,7 +123,7 @@ for result in collection.find():
 
         collection.update_one({"_id": result['_id']}, {
                               "$set": {"fan_adds_removes_rate": 0}})
-# ajout des mÃƒÂ©triques sur vidéo:
+# ajout des metriques sur posts de type video:
     # ajout du taux : vus_unique/vus
     try:
         vus = result["page_video_views"]
@@ -166,7 +166,7 @@ for result in collection.find():
     # ajout de verification_status
 
     for doc in page_fb_collection.find():
-        # codage de verification_status : 1 indique verified et 0 indque non verified
+        # codage de verification_status : 1 indique verified et 0 indique non verified
         if doc["id"] == result["id"]:
             verification_status = 0
             if doc["verification_status"] != "not_verified":
@@ -174,8 +174,12 @@ for result in collection.find():
 
             collection.update_one({"_id": result['_id']}, {
                                   "$set": {"verification_status": verification_status}})
-# Normalisation des variables utilisées pour le calcul du score
-#### Normalisation : (x - min) / (max - min)
+
+# Normalisation des variables utilisees pour le calcul du score
+
+#### Normalisation des attributs positifs : (x - min) / (max - min)
+#### Normalisation des attributs negatifs : (x - max) / (max - min)
+
 kpis_pos = ["page_fans", "page_engagement_rate",
             "page_posts_engagement_rate", "reach_rate", "fan_adds_rate",
             "fan_adds_removes_rate", "verification_status", "page_video_views", "vu_unique_rate", "vu_click_rate", "vu_complete_30s_rate"]
@@ -258,10 +262,11 @@ for inf in collection.find():
 
 # best_alt = [1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1 ,1]*weights
 
-best_alt = [0.25, 0.025, 0.15, 0.1, 0.15, 0.05,
+best_alt = [0.25, 0, 0.15, 0.1, 0.15, 0.05,
             0.025, 0.1, 0.1125, 0.0125, 0.0125, 0.0125]
 
-# pire influenceur: (min-min/max-min=0)
+# pire influenceur: (min-min/max-min=0)/(min-max/max-min=1)
+# best_alt = [0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]*weights
 
 worst_alt = [0, 0.025, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
 
