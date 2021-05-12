@@ -2,6 +2,8 @@
 Python scripts for influence calculations on social networks
 
 First create a local config.py file to store local setup: 
+```python
+# passphrase de connexion mongoDB
 MONGO_PASSPHRASE = "your_local_connexion_setup"
 # nom de la DB
 MONGO_DB_NAME = "classed"
@@ -14,3 +16,4 @@ COLL_IG_STATS = "page_ig_stat"
 COLL_IG_MEDIA = "page_ig_media"
 COLL_TW = "twitter"
 COLL_TW_STATS = "twitter_tweets_stats"
+```
