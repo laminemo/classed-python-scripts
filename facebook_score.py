@@ -179,12 +179,12 @@ for result in collection.find():
 
 #### Normalisation des attributs positifs : (x - min) / (max - min)
 #### Normalisation des attributs negatifs : (x - max) / (max - min)
-
+division=[1,2,3,4,5,6]
 kpis_pos = ["page_fans", "page_engagement_rate",
             "page_posts_engagement_rate", "reach_rate", "fan_adds_rate",
             "fan_adds_removes_rate", "verification_status", "page_video_views", "vu_unique_rate", "vu_click_rate", "vu_complete_30s_rate"]
 kpis_neg = ["page_negative_feedback_unique"]
-collection = db["page_fb_stats"]
+collection = db[config.COLL_PAGES_FB_STATS]
 for kpi in kpis_pos:
     for k in kpis_neg:
         for div in division:
@@ -221,14 +221,14 @@ for kpi in kpis_pos:
 
                 for user in collection.find({"division": div}):
 
-                    if (max - min) != 0:
+                    if max != min :
                         collection.update_one({"_id": user['_id']},
                                               {"$set": {kpi + "_normal": (user[kpi] - min) / (max - min)}})
 
                     else:
                         collection.update_one({"_id": user['_id']}, {
                                               "$set": {kpi + "_normal": 0}})
-                    if (max_1 - min_1) != 0:
+                    if max_1 != min_1 :
                         collection.update_one({"_id": user['_id']},
                                               {"$set": {k + "_normal": (user[k] - max) / (max - min)}})
                     else:
