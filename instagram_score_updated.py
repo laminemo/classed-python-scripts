@@ -159,6 +159,7 @@ for user in page_ig.find():
     s_moins = distance.euclidean(feature_list, worst_i)
     s_plus = distance.euclidean(feature_list, best_i)
 
+
     score = (s_moins / (s_moins + s_plus)) * 100
 
     page_ig.update_one({"_id": user['_id']}, {"$set": {"SCORE": int(score)}})
