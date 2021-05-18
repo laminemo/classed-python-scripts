@@ -3,7 +3,6 @@ from pymongo import MongoClient
 from scipy.spatial import distance
 import config
 
-
 ##Connection a mongo
 cluster = MongoClient(config.MONGO_PASSPHRASE)
 base = cluster[config.MONGO_DB_NAME]
@@ -16,7 +15,7 @@ inluence_account = base[config.COLL_INFLUENCE_ACCOUNTS]
 base.media.drop()
 
 ##Division
-division = [10000000,5000,200,100,50,0]
+division = [10000000,5000,2000,1000,500,0]
 #division = [0, 50, 100, 500, 5000, 1000000]
 for result in page_ig.find():
     for i in range(len(division)-1):
@@ -146,16 +145,16 @@ for feature in instagram_features:
 base.media.drop()
 #### Implémentation de TOPSIS
 feature_list = [ "followers_count_normal", "FOLLOW_RATE_normal" ,"REACH_RATE_normal" , "AVG_EG_POSTS_normal", "profile_views_normal"]
-best_i = [0.3,0.2,0.2,0.2,0.1]
+best_i = [0.4,0.05,0.2,0.3,0.05]
 worst_i = [0, 0, 0, 0, 0]
 for user in page_ig.find():
     feature_list = []
 
-    feature_list.append(0.3 * user["followers_count_normal"])
-    feature_list.append(0.2 * user["FOLLOW_RATE_normal"])
+    feature_list.append(0.4 * user["followers_count_normal"])
+    feature_list.append(0.05 * user["FOLLOW_RATE_normal"])
     feature_list.append(0.2 * user["REACH_RATE_normal"])
-    feature_list.append(0.2 * user["AVG_EG_POSTS_normal"])
-    feature_list.append(0.1 * user["profile_views_normal"])
+    feature_list.append(0.3 * user["AVG_EG_POSTS_normal"])
+    feature_list.append(0.05 * user["profile_views_normal"])
 
     s_moins = distance.euclidean(feature_list, worst_i)
     s_plus = distance.euclidean(feature_list, best_i)
