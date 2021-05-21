@@ -6,7 +6,7 @@ logging.basicConfig(filename='try_test1.log', level=logging.DEBUG,
 logger=logging.getLogger(__name__)
 stream_handler =logging.StreamHandler()
 
-##
+
 #numeric value : Debug : 0 , INFO : 10 ,WARNING : 20 ,ERROR : 30 , CRITICAL : 40
 #logging.debug("this is a DEBUG message")
 #logging.info("this is an INFO ")
