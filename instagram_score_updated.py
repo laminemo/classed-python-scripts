@@ -1,7 +1,7 @@
 ## create and configure logger
 import logging
 logging.basicConfig(filename='try_test1.log', level=logging.DEBUG,
-                    format='%(asctime)s:%(message)s',datefmt='%d-%m-%Y:%H:%M:%S')
+                    format='%(asctime)s:%(message)s',datefmt='%d-%m-%Y:%H:%M:%S',filemode ='w')
 
 logger=logging.getLogger(__name__)
 stream_handler =logging.StreamHandler()
@@ -19,7 +19,6 @@ try:
     from pymongo import MongoClient
     from scipy.spatial import distance
     import config
-    logger.info('Library Imported Perfectly')
 except:
     logger.exception('!!!Library Not Installed')
 
@@ -43,7 +42,7 @@ try:
     page_ig = base[config.COLL_IG]
     page_ig_media = base[config.COLL_IG_MEDIA]
     inluence_account = base[config.COLL_INFLUENCE_ACCOUNTS]
-    logger.info('Connection is Done')
+
 except:
     logger.exception('!!!Problem in Connection with Mongo')
 
@@ -67,10 +66,13 @@ try:
 except Exception as e:
     logging.error("!!!Division is not ", exc_info=True)
 
+####
+
+
 ##Traitement de la base page_media
 try:
-    base = cluster['page_insta']
-    media = base["media"]
+    base = cluster[config.MONGO_DB_NAME]
+    media = base[config.COLL_IG_MEDIA]
 except Exception as e:
     logging.error("!!!Base media not created ", exc_info=True)
 
@@ -156,6 +158,7 @@ try:
                 page_ig.update_one({"page_id": ii["id"]}, {"$set":{'IMPRESSIONS':ii['impressions'] }})
                 page_ig.update_one({"page_id": ii["id"]}, {"$set": {'REACH':ii['reach']}})
                 page_ig.update_one({"page_id": ii["id"]}, {"$set": {'profile_VIEWS': ii['profile_views']}})
+                page_ig.update_one({"page_id": ii["id"]}, {"$set": {'date': ii['date']}})
                 page_ig.update_one({'page_id': ii['id']}, {'$pull': {'id': None}})
             except:
                 page_ig.update_one({"id": ii["id"]}, {"$set": {'IMPRESSIONS': 0}})
